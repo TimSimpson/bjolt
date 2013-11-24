@@ -1,0 +1,61 @@
+~import LineParser;
+~import Process;
+~import PlatformConsole;
+~import BoostTestParser;
+~import MsvcParser;
+~import ParserChain;
+~import std::string;
+~import std::stringstream;
+~import TCharString;
+
+
+~unit "bjolt" type=exe
+{
+
+    ~block "cpp"
+    {
+        int main(int argc, char ** argv)
+        {
+            using FinalParser =
+             ParserChain<BoostTestParser,
+                        ParserChain<MsvcParser,
+                        ParserChainEnd>>;
+            using ProcessParser = LineParser<PlatformConsole, FinalParser>;
+            ProcessParser parser;
+
+            Process proc;
+            auto ts = proc.ExeDirectory();
+            ts.AppendAt(ts.Length(), "\\bjam-old.exe");
+
+
+            stringstream sArgs;
+            for (int index = 1; index < argc; ++ index)
+            {
+                sArgs << argv[index] << " ";
+            }
+            TCharString args(sArgs.str());
+
+            proc.Run(ts.Get(), args.Get());
+
+            const size_t BUFSIZE = 1024 * 12;
+            DWORD bytesRead;
+            CHAR buffer[BUFSIZE];
+            while(proc.Read(bytesRead, buffer, BUFSIZE))
+            {
+                parser.ParseLine(buffer, bytesRead);
+            }
+            parser.ParseLine("\n", 1);
+            //proc.Close();
+
+            /*PlatformConsole console;
+            ParserList parser;
+			BoostTestParser parser;
+            Process proc(console, parser);
+            auto ts = proc.ExeDirectory();
+			ts.AppendAt(ts.Length(), "\\test-exe.exe");
+			cout << ts.Get() << "\n";
+            proc.Run(ts.Get(), "1 2 3 4 5");
+			proc.ReadFromPipe();*/
+        }
+    }
+}

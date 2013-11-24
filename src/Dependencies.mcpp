@@ -1,0 +1,16 @@
+class boost::optional{ ~hfile=<boost/optional.hpp> };
+class CONSOLE_SCREEN_BUFFER_INFO { ~hfile=<windows.h> };
+class DWORD { ~hfile=<windows.h> };
+class HANDLE { ~hfile=<windows.h> };
+class PROCESS_INFORMATION { ~hfile=<windows.h> };
+class SECURITY_ATTRIBUTES { ~hfile=<windows.h> };
+class TCHAR { ~hfile=<windows.h> };
+class std::wstring { ~hfile=<string> };
+class W2T { ~hfile=<atlconv.h> };
+class WORD { ~hfile=<windows.h> };
+class std::unique_ptr { ~hfile=<memory> };
+
+
+class ParserChain { ~hfile=<ParserChain.hpp> };
+class ParserStatus { ~hfile=<ParserStatus.hpp> };
+class LineParser { ~hfile=<LineParser.hpp> };

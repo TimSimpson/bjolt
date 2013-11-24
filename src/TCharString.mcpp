@@ -1,0 +1,68 @@
+~import std::cout;
+~import boost::optional;
+~import std::string;
+~import TCHAR;
+
+class TCharString
+{
+    ~block "h"
+    {
+        TCHAR buffer[MAX_PATH + 1];
+    }
+
+    public TCharString()
+    {
+        buffer[0] = '\0';
+    }
+
+    public TCharString(const string & normalString)
+    {
+        if (normalString.size() >= MaxSize() - 1)
+        {
+            cout << "Too many arguments.\n";
+            std::abort();
+        }
+        std::copy(normalString.begin(), normalString.end(), buffer);
+        buffer[normalString.size()] = '\0';
+    }
+
+    public void AppendAt(size_t startIndex, TCHAR * other)
+    {
+        const auto sizeOfOther = strlen(other);
+        if (startIndex + sizeOfOther >= MaxSize())
+        {
+            std::cout << "Error with string appending.\n";
+            std::abort();
+        }
+        TCHAR * startPtr = Get();
+        startPtr += startIndex;
+        ::strcpy_s(startPtr, MaxSize() - startIndex, other);
+    }
+
+    public TCHAR * Get()
+    {
+        return buffer;
+    }
+
+    public optional<size_t> LastSlash() const
+    {
+        for (size_t index = Length() - 1; index >= 0; --index)
+        {
+            if (buffer[index] == '\\')
+            {
+                return index;
+            }
+        }
+        return boost::none;
+    }
+
+    public size_t Length() const
+    {
+        return ::strlen(buffer);
+    }
+
+    public inline size_t MaxSize() const
+    {
+        return MAX_PATH;
+    }
+};

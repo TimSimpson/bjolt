@@ -1,0 +1,72 @@
+~import Parser;
+~import ParserStatus;
+~import TCHAR;
+
+class BoostTestParser
+{
+    ~block "h"
+    {
+        enum State {
+            Start,
+            LineNumber,
+            RightParens,
+            ErrorInText
+        };
+
+        private: State state;
+    }
+
+    private int rightParensIndex;
+
+    public BoostTestParser()
+    :   state(Start),
+        rightParensIndex(0)
+    {
+    }
+
+    public ParserStatus Parse(TCHAR & element)
+    {
+        const char * const rightParensStuff = ": error in \"";
+        switch (state)
+        {
+            case Start:
+                if ('(' == element)
+                {
+                    state = LineNumber;
+                }
+                break;
+            case LineNumber:
+                if (element < '0' || element > '9')
+                {
+                    if (')' == element)
+                    {
+                        state = RightParens;
+                    }
+                    else
+                    {
+                        state = Start;
+                    }
+                }
+                break;
+            case RightParens:
+                if (rightParensStuff[rightParensIndex] == element)
+                {
+                    ++ rightParensIndex;
+                    if (rightParensIndex >= sizeof(rightParensStuff))
+                    {
+                        rightParensIndex = 0;
+                        return ParserStatus::Error;
+                    }
+                }
+                else
+                {
+                    rightParensIndex = 0;
+                    state = Start;
+                }
+            default:
+                break;
+        }
+        return ParserStatus::Ok;
+    }
+};
+

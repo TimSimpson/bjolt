@@ -1,0 +1,110 @@
+~import CONSOLE_SCREEN_BUFFER_INFO;
+~import std::cout;
+~import HANDLE;
+~import std::stringstream;
+~import WORD;
+
+
+class PlatformConsole
+{
+    int columns;
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    bool ok;
+    WORD originalColor;
+    HANDLE stdOut;
+
+    public PlatformConsole()
+    :   ok(false)
+    {
+        stdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        if (INVALID_HANDLE_VALUE != stdOut)
+        {
+            if (0 != GetConsoleScreenBufferInfo(stdOut, &info))
+            {
+                originalColor = info.wAttributes;
+            }
+            else
+            {
+                cout << "Error initializing console.\n";
+                std::abort();
+            }
+        }
+        columns = info.srWindow.Right - info.srWindow.Left + 1;
+    }
+
+    public void SetError()
+    {
+        // It probably is wrong to not write to stderr... but
+        // then why does it feel so right?
+        SetConsoleTextAttribute(stdOut, (WORD) 12);
+    }
+
+    public void SetNormal()
+    {
+        SetConsoleTextAttribute(stdOut, originalColor);
+    }
+
+    public void SetWarning()
+    {
+        SetConsoleTextAttribute(stdOut, (WORD) 14);
+    }
+
+    ~hidden void write(const std::string & line)
+    {
+        size_t remaining = line.size();
+        size_t index = 0;
+        size_t tabs = 0;
+
+        while(0 < remaining)
+        {
+            if (tabs)
+            {
+                std::cout << " .. ";
+            }
+            if (remaining < (columns - tabs))
+            {
+                std::cout << line.substr(line.size() - remaining, remaining)
+                          << "\n";
+                remaining = 0;
+            }
+            else
+            {
+                size_t endIndex = index + columns - 1 - tabs;
+                while(endIndex > index && line[endIndex] > 32)
+                {
+                    endIndex --;
+                }
+                if (endIndex == index)
+                {
+                    endIndex = index + columns - 1 - tabs;
+                }
+                ::std::cout << line.substr(index, endIndex - index) << "\n";
+                tabs = 4;
+                index = endIndex;
+                remaining = line.size() - endIndex;
+            }
+        }
+    }
+
+    public void WriteNormal(const std::string & line)
+    {
+        write(line);
+    }
+
+    public void WriteError(const std::string & line)
+    {
+        SetError();
+        write(line);
+        SetNormal();
+    }
+
+    public void WriteWarning(const std::string & line)
+    {
+        SetWarning();
+        write(line);
+        SetNormal();
+    }
+
+
+
+};

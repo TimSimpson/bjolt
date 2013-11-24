@@ -1,0 +1,142 @@
+~import Parser;
+~import ParserStatus;
+~import TCHAR;
+
+//C:\Users\Tim\Work\Lp3\Projects\Bjolt\target\Process.cpp(43) : warning C4251: 'Process::lineBuffer' : class 'std::ba
+
+class MsvcParser
+{
+    ~block "h"
+    {
+        enum State {
+            Start,
+            LineNumber,
+            RightParens,
+			Colon,
+			SecondSpace,
+            TypeSelect,
+            Warning,
+            Error
+        };
+
+        private: State state;
+    }
+
+    private int textMatchIndex;
+
+    public MsvcParser()
+    :   state(Start),
+        textMatchIndex(0)
+    {
+    }
+
+    public ParserStatus Parse(TCHAR & element)
+    {
+        const char * const warningText = "arning ";
+        const char * const errorText = "rror ";
+        switch (state)
+        {
+            case Start:
+                if ('(' == element)
+                {
+                    state = LineNumber;
+                }
+                break;
+            case LineNumber:
+                if (element < '0' || element > '9')
+                {
+                    if (')' == element)
+                    {
+                        state = RightParens;
+                    }
+                    else
+                    {
+                        state = Start;
+                    }
+                }
+                break;
+            case RightParens:
+                if (' ' == element)
+                {
+                    state = Colon;
+                }
+                else
+                {
+                    state = Start;
+                }
+                break;
+			case Colon:
+				if (':' == element)
+				{
+					state = SecondSpace;
+				}
+				else
+				{
+					state = Start;
+				}
+				break;
+			case SecondSpace:
+				if (' ' == element)
+				{
+					state = TypeSelect;
+				}
+				else
+				{
+					state = Start;
+				}
+				break;
+            case TypeSelect:
+                if ('w' == element)
+                {
+                    state = Warning;
+                    textMatchIndex = 0;
+                }
+                else if ('e' == element)
+                {
+                    state = Error;
+                    textMatchIndex = 0;
+                }
+                else
+                {
+                    state = Start;
+                }
+                break;
+            case Warning:
+                if (warningText[textMatchIndex] == element)
+                {
+                    ++ textMatchIndex;
+                    if (textMatchIndex >= sizeof(warningText))
+                    {
+                        textMatchIndex = 0;
+                        return ParserStatus::Warning;
+                    }
+                }
+                else
+                {
+                    textMatchIndex = 0;
+                    state = Start;
+                }
+                break;
+            case Error:
+                if (errorText[textMatchIndex] == element)
+                {
+                    ++ textMatchIndex;
+                    if (textMatchIndex >= sizeof(errorText))
+                    {
+                        textMatchIndex = 0;
+                        return ParserStatus::Error;
+                    }
+                }
+                else
+                {
+                    textMatchIndex = 0;
+                    state = Start;
+                }
+                break;
+            default:
+                break;
+        }
+        return ParserStatus::Ok;
+    }
+};
+
