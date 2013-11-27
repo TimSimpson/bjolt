@@ -23,16 +23,18 @@ class Process
     //private ParserStatus currentLineStatus;
     //private BoostTestParser parser;
     PROCESS_INFORMATION processInfo;
+    private int result;
     private int state;
     private SECURITY_ATTRIBUTES secAttr;
     private HANDLE stdoutRead;
     private HANDLE stdoutWrite;
+    private HANDLE thread;
     //private stringstream lineBuffer;
 
     public Process()
+    :   result(-1),
+        state(0)
     {
-        state = 0;
-
         secAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
         secAttr.bInheritHandle = TRUE;
         secAttr.lpSecurityDescriptor = NULL;
@@ -66,68 +68,10 @@ class Process
         return str;
     }
 
-    /*~hidden void parseOutput(TCHAR * more, size_t length)
+    public int GetResult() const
     {
-        for (signed int i = 0; i < length; ++i)
-        {
-            if ('\n' == more[i])
-            {
-                printLine();
-            }
-            else
-            {
-                const auto result = parse(more[i]);
-                if (result > currentLineStatus)
-                {
-                    currentLineStatus = result;
-                }
-                lineBuffer << more[i];
-            }
-        }
-    }*/
-
-    /*~hidden ParserStatus parse(TCHAR & element)
-    {
-        return parser.Parse(element);
+        return result;
     }
-
-    ~hidden void printLine()
-    {
-        if (currentLineStatus == Parser::Error)
-        {
-            console.WriteError(lineBuffer.str());
-        }
-        else if (currentLineStatus == Parser::Warning)
-        {
-            console.WriteWarning(lineBuffer.str());
-        }
-        else
-        {
-            console.WriteNormal(lineBuffer.str());
-        }
-        lineBuffer.str("");
-        lineBuffer.clear();
-        currentLineStatus = Parser::Ok;
-    }*/
-
-    /*public void ReadFromPipe()
-    {
-        #define BUFSIZE (1024 * 12)
-        DWORD bytesRead;
-        CHAR buffer[BUFSIZE];
-
-        while(true)
-        {
-            const BOOL success = ReadFile(stdoutRead, buffer, BUFSIZE - 1,
-                                          &bytesRead, NULL);
-            if (!success || bytesRead == 0)
-            {
-                break;
-            }
-            parseOutput(buffer, bytesRead);
-        }
-        parseOutput("\n", 1);
-    }*/
 
     public bool Read(DWORD & bytesRead, char * buffer, size_t bufferSize)
     {
@@ -203,7 +147,12 @@ class Process
             static DWORD WINAPI  Close(LPVOID pc)
             {
                 ProcCloser * me = static_cast<ProcCloser *>(pc);
-                WaitForSingleObject(me->p.processInfo.hProcess, 2 * 60 * 1000);
+                WaitForSingleObject(me->p.processInfo.hProcess, INFINITE);
+                if (! ::GetExitCodeProcess(me->p.processInfo.hProcess,
+                                           (LPDWORD) &(me->p.result)))
+                {
+                    me->p.result = -255;
+                }
                 ::CloseHandle(me->p.processInfo.hProcess);
                 ::CloseHandle(me->p.processInfo.hThread);
                 ::CloseHandle(me->p.stdoutWrite);
@@ -213,7 +162,7 @@ class Process
 
         // Total memory leak. I HAVE NO REGRETS.
         ProcCloser * pCloser = new ProcCloser(*this);
-        HANDLE thread = CreateThread(
+        thread = CreateThread(
             NULL,                   // default security attributes
             0,                      // use default stack size
             ProcCloser::Close,       // thread function name
@@ -222,5 +171,9 @@ class Process
             NULL);   // returns the thread identifier
     }
 
+    public void Wait() const
+    {
+        WaitForSingleObject(thread, INFINITE);
+    }
 
 };

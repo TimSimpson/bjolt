@@ -22,6 +22,8 @@
             for (decltype(argc) i = 0; i < argc; ++ i)
                 cout << i << "=" << argv[i] << "\n";
 
+            #include "BigString.h";
+            cout << BIG_STRING << "\n";
             cout << "Blsbh alb (52): error in \"duck\": You are dumb.\n";
             cout << "Blsbh alb  (0 52): error in \"duck\": You are dumb.\n";
             cout << "Blsbh alb (529): error in \"duck\": You are dumb.\n";
@@ -38,9 +40,10 @@
                     "/manifest:embed /DEBUG /PDB:\"C:/Users/Tim/Work/Lp3/"
                     "Projects/Bjolt/target/Debug/bjolt.pdb\n";
 
-            cout << "File Something (32) : warning CHSDjh vs2013 warning\\n";
-            #include "BigString.h";
-            cout << BIG_STRING << "\n";
+            cout << "File Something (32) : warning CHSDjh vs2013 warning\n";
+
+            cout << "File Something : fatal error LNK33 The Adventure of Link\n";
+            cout << "File Something : error LNK4 Lzink\n";
         }
     }
 }

@@ -3,6 +3,7 @@
 ~import PlatformConsole;
 ~import BoostTestParser;
 ~import MsvcParser;
+~import MsvcParser2;
 ~import ParserChain;
 ~import std::string;
 ~import std::stringstream;
@@ -19,7 +20,8 @@
             using FinalParser =
              ParserChain<BoostTestParser,
                         ParserChain<MsvcParser,
-                        ParserChainEnd>>;
+                        ParserChain<MsvcParser2,
+                        ParserChainEnd>>>;
             using ProcessParser = LineParser<PlatformConsole, FinalParser>;
             ProcessParser parser;
 
@@ -31,7 +33,7 @@
             stringstream sArgs;
             for (int index = 1; index < argc; ++ index)
             {
-                sArgs << argv[index] << " ";
+                sArgs << " " << argv[index];
             }
             TCharString args(sArgs.str());
 
@@ -45,6 +47,8 @@
                 parser.ParseLine(buffer, bytesRead);
             }
             parser.ParseLine("\n", 1);
+            proc.Wait();
+            return proc.GetResult();
             //proc.Close();
 
             /*PlatformConsole console;
