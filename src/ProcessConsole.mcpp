@@ -22,11 +22,11 @@ class PlatformConsole
             if (0 != GetConsoleScreenBufferInfo(stdOut, &info))
             {
                 originalColor = info.wAttributes;
+                ok = true;
             }
             else
             {
-                cout << "Error initializing console.\n";
-                std::abort();
+                ok = false;
             }
         }
         columns = info.srWindow.Right - info.srWindow.Left + 1;
@@ -34,19 +34,28 @@ class PlatformConsole
 
     public void SetError()
     {
-        // It probably is wrong to not write to stderr... but
-        // then why does it feel so right?
-        SetConsoleTextAttribute(stdOut, (WORD) 12);
+        if (ok)
+        {
+            // It probably is wrong to not write to stderr... but
+            // then why does it feel so right?
+            SetConsoleTextAttribute(stdOut, (WORD) 12);
+        }
     }
 
     public void SetNormal()
     {
-        SetConsoleTextAttribute(stdOut, originalColor);
+        if (ok)
+        {
+            SetConsoleTextAttribute(stdOut, originalColor);
+        }
     }
 
     public void SetWarning()
     {
-        SetConsoleTextAttribute(stdOut, (WORD) 14);
+        if (ok)
+        {
+            SetConsoleTextAttribute(stdOut, (WORD) 14);
+        }
     }
 
     ~hidden void write(const std::string & line)
